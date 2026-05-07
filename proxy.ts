@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createSupabaseServerClient } from "./lib/supabase/server-client"
+import { createSupabaseServerClient } from "./lib/supabase/server"
 
 export const proxy = async (request: NextRequest) => {
     const response = NextResponse.next({

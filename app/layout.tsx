@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Momo_Trust_Display, Roboto } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "./_context/authentication";
-import { createSupabaseServerClient } from "@/lib/supabase/server-client";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const roboto = Roboto({
   variable: "--font-roboto",

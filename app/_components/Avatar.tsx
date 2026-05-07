@@ -32,16 +32,19 @@ const Avatar = ({
     
     const menuItems = [
         {
+            id: "profile",
             label: "Profile",
             icon: <UserIcon size={20}/>,
             onClick: () => router.push(`/user/${user?.id}/account`)
         },
         {
+            id: "settings",
             label: "Settings",
             icon: <Settings size={20}/>,
             onClick: () => router.push(`/user/${user?.id}/settings`)
         },
         {
+            id: "logout",
             label: "Log out",
             icon: <LogOut size={20}/>,
             onClick: handleSignOut,
@@ -68,6 +71,7 @@ const Avatar = ({
                     {
                         menuItems.map((item) => (
                             <DropdownMenuItem 
+                                key={item.id}
                                 onClick={item.onClick} 
                                 variant={item.variant}
                                 className={`p-2 my-1 text-muted-foreground items-center cursor-pointer`}

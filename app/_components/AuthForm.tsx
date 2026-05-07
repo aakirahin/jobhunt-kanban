@@ -1,5 +1,6 @@
 "use client"
 
+import React, { useState } from "react"
 import {
   Field,
   FieldGroup,
@@ -7,17 +8,14 @@ import {
 } from "../_components/ui/field"
 import { Input } from "../_components/ui/input"
 import { Button } from "../_components/ui/button"
-import React, { useState } from "react"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import { Check, X } from "lucide-react"
-import Image from "next/image"
-import { Separator } from "./ui/separator"
+import { buttonClass } from "@/lib/tailwindClasses"
 
 type Mode = "login" | "register"
 type Status = { status: "error" | "success" | "", message: string }
 
 const inputClass = 'py-4.5 focus:outline-none focus:ring-0 focus:border-transparent duration-300 transition-all'
-const buttonClass = "hover:-translate-y-[4px] hover:shadow-[0px_4px_0px_#000] active:translate-y-0 active:shadow-none transition-all duration-300 w-full border border-black py-4.5 cursor-pointer"
 const defaultForm = [
     {
         id: "email",
@@ -97,7 +95,7 @@ const AuthForm = () => {
         <form 
             onSubmit={handleSubmit}
             method="post"
-            className="bg-white rounded-[20px] border shadow-[0px_6px_0px_#000] flex flex-col p-8 gap-6 w-1/5 items-center"
+            className="bg-white rounded-[20px] border shadow-[0px_6px_0px_#3A3A3A] flex flex-col p-8 gap-6 w-1/5 items-center"
         >
             <FieldGroup key={mode} className="gap-4">
                 <h1 className="text-4xl mb-2 font-momo">{heading}</h1>
@@ -113,7 +111,7 @@ const AuthForm = () => {
             <Field orientation="vertical" className="gap-3 text-center">
                 <Button 
                     type="submit"
-                    className={`bg-[#96ED40]/80 ${buttonClass}`}
+                    className={`bg-[#96ED40]/80 py-4.5 w-full ${buttonClass}`}
                 >
                     {label}
                 </Button>
@@ -130,7 +128,7 @@ const AuthForm = () => {
                 <Button 
                     type="reset"
                     onClick={handleGoogle}
-                    className={`bg-gray-50 ${buttonClass} flex items-middle`}
+                    className={`bg-gray-50 py-4.5 w-full flex items-middle ${buttonClass}`}
                 >
                     <Image
                         src="/google-icon.png"

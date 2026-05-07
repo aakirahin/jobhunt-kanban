@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                       String       @id @db.Uuid
+  email                    String       @unique
+  name                     String?
+  avatar                   String?
+  status                   Status       @default(UNEMPLOYED)
+  jobs                     Job[]
+  sent_friend_requests     Friendship[] @relation("SentFriendRequests")
+  received_friend_requests Friendship[] @relation("ReceivedFriendRequests")
+  columns                  Columns[]
+  created_at               DateTime     @default(now())
+  updated_at               DateTime     @updatedAt
+}
+
+model Friendship {
+  id                String           @id @default(cuid())
+  requester_id      String           @db.Uuid
+  addressee_id      String           @db.Uuid
+  requester         User             @relation("SentFriendRequests", fields: [requester_id], references: [id], onDelete: Cascade)
+  addressee         User             @relation("ReceivedFriendRequests", fields: [addressee_id], references: [id], onDelete: Cascade)
+  status            FriendshipStatus @default(PENDING)
+  requested_at      DateTime         @default(now())
+  responded_at      DateTime?
+  created_at        DateTime         @default(now())
+  updated_at        DateTime         @updatedAt
+
+  @@unique([requester_id, addressee_id])
+  @@index([requester_id, status])
+  @@index([addressee_id, status])
+}
+
+model Job {
+  id                String               @id @default(cuid())
+  user_id           String               @db.Uuid
+  user              User                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  title             String
+  company           String
+  location          String?
+  work_arrangement  WorkArrangement?
+  contract_type     ContractType?
+  url               String?
+  notes             String?
+  applicationStatus JobApplicationStatus @default(APPLIED)
+  applied_at        DateTime             @default(now())
+  created_at        DateTime             @default(now())
+  updated_at        DateTime             @updatedAt
+
+  @@index([user_id])
+  @@index([user_id, applicationStatus])
+}
+
+model Columns {
+  id         String   @id @default(cuid())
+  user_id    String   @db.Uuid
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  name       String
+  position   Int
+  colour     String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([user_id, position])
+  @@unique([user_id, position])
+}
+
+enum Status {
+  EMPLOYED
+  UNEMPLOYED
+}
+
+enum WorkArrangement {
+  ONSITE
+  HYBRID
+  REMOTE
+}
+
+enum ContractType {
+  FREELANCE
+  CONTRACT
+  PERMANENT
+}
+
+enum JobApplicationStatus {
+  SAVED
+  APPLIED
+  INTERVIEW
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+// Clean DB later, archive/prune old declined/canceled rows with a cron job.
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELED
+}
