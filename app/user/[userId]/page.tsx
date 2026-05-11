@@ -1,52 +1,27 @@
-import Column from "@/app/_components/Column"
-import FilterBar from "@/app/_components/FilterBar"
+import Board from "@/app/_components/KanbanBoard/Board"
+import prisma from "@/lib/prisma"
 
-type Props = {}
+type Props = {
+  params: Promise<{
+    userId: string
+  }>
+}
 
-// TODO THIS SHOULD GO TO BACKEND AND ALLOW CRUD OPTIONS
-const columns = [
-  {
-    id: "saved",
-    label: "Saved",
-    colour: "#A6BBFB"
-  },
-  {
-    id: "applied",
-    label: "Applied",
-    colour: "#99D1FB"
-  },
-  {
-    id: "interviewed",
-    label: "Interviewed",
-    colour: "#4FE7CD"
-  },
-  {
-    id: "accepted",
-    label: "Accepted",
-    colour: "#95EC3F"
-  },
-  {
-    id: "rejected",
-    label: "Rejected",
-    colour: "#FEAAC2"
-  },
-]
+const Page = async ({ params }: Props) => {
+  const { userId } = await params
 
-const Page = async (props: Props) => {  
+  const columns = await prisma.column.findMany({
+    where: { user_id: userId },
+    orderBy: { position: "asc" },
+  })
+
+  const jobs = await prisma.job.findMany({
+    where: { user_id: userId },
+    orderBy: { created_at: "desc" },
+  })
+
   return (
-    <div className="flex flex-col gap-4">
-      <FilterBar/>
-      <div className="flex gap-4">
-        {
-          columns.map((column) => (
-            <Column
-              key={column.id}
-              column={column}
-            />
-          ))
-        }
-      </div>
-    </div>
+    <Board initialColumns={columns} initialJobs={jobs}/>
   )
 }
 

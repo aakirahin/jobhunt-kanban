@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu"
+} from "../ui/dropdown-menu"
 import { LogOut, Settings, User as UserIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -27,7 +27,7 @@ const Avatar = ({
     
     const handleSignOut = async () => {
         await supabase.auth.signOut()
-        window.location.href = '/authenticate'
+        window.location.href = '/'
     }
     
     const menuItems = [

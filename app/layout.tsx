@@ -3,6 +3,7 @@ import { Momo_Trust_Display, Roboto } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "./_context/authentication";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import Provider from "./providers";
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -37,7 +38,9 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <UserProvider user={user}>
-          {children}
+          <Provider>
+            {children}
+          </Provider>
         </UserProvider>
       </body>
     </html>

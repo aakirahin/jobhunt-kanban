@@ -1,15 +1,15 @@
 "use client"
 
-import { Calendar, House, Users } from 'lucide-react'
+import { House, Users } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useAuth } from '../_context/authentication'
-import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 
 const Sidebar = () => {
     const { user } = useAuth()
-    const [selected, setSelected] = useState<string>(window.location.pathname ?? "")
+    const selected = usePathname()
 
     const links = [
         {
@@ -17,12 +17,6 @@ const Sidebar = () => {
             label: "Home",
             icon: <House size={16}/>,
             href: `/user/${user?.id}`
-        },
-        {
-            id: "backlog",
-            label: "Backlog",
-            icon: <Calendar size={16}/>,
-            href: `/user/${user?.id}/backlog`
         },
         {
             id: "friends",
@@ -46,7 +40,6 @@ const Sidebar = () => {
                     <Link 
                         key={link.id}
                         href={link.href}
-                        onClick={() => setSelected(link.href)}
                         className={`${selected === link.href ? "bg-[#3A3A3A] text-[#FFF987]" : "text-[#3A3A3A] hover:bg-[#3A3A3A25]"} font-medium py-2 px-4 rounded-lg flex gap-2 items-center cursor-pointer transition-colors duration-300`}
                     >
                         {link.icon}

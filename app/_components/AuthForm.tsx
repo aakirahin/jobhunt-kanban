@@ -10,12 +10,13 @@ import { Input } from "../_components/ui/input"
 import { Button } from "../_components/ui/button"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import { Check, X } from "lucide-react"
-import { buttonClass } from "@/lib/tailwindClasses"
+import { buttonClass, inputClass } from "@/lib/tailwindClasses"
+import { Separator } from "./ui/separator"
+import Image from "next/image"
+import { Status } from "@/lib/types"
 
 type Mode = "login" | "register"
-type Status = { status: "error" | "success" | "", message: string }
 
-const inputClass = 'py-4.5 focus:outline-none focus:ring-0 focus:border-transparent duration-300 transition-all'
 const defaultForm = [
     {
         id: "email",
@@ -49,7 +50,7 @@ const AuthForm = () => {
     const { label, heading, form, subtitle } = formType[mode]
     const supabase = createSupabaseBrowserClient()
 
-    // WHAT TO SHOW IF USER ALREADY AUTHENTICATED
+    // TODO: WHAT TO SHOW IF USER ALREADY AUTHENTICATED
     
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -67,7 +68,7 @@ const AuthForm = () => {
                 email: email as string,
                 password: password as string,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/welcome`
+                    emailRedirectTo: `${window.location.origin}/auth/callback`,
                 }
             })
 
@@ -88,6 +89,9 @@ const AuthForm = () => {
     const handleGoogle = async () => {
         await supabase.auth.signInWithOAuth({
             provider: "google",
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+            },
         })
     }
 
@@ -109,10 +113,7 @@ const AuthForm = () => {
                 }
             </FieldGroup>
             <Field orientation="vertical" className="gap-3 text-center">
-                <Button 
-                    type="submit"
-                    className={`bg-[#96ED40]/80 py-4.5 w-full ${buttonClass}`}
-                >
+                <Button type="submit" className={`bg-[#96ED40]/80 py-4.5 w-full ${buttonClass}`}>
                     {label}
                 </Button>
                 <span 
@@ -124,7 +125,7 @@ const AuthForm = () => {
                 >
                     {subtitle}
                 </span>
-                {/* <Separator className="my-2"/>
+                <Separator className="my-2"/>
                 <Button 
                     type="reset"
                     onClick={handleGoogle}
@@ -137,7 +138,7 @@ const AuthForm = () => {
                         height={16}
                     />
                     Continue with Google
-                </Button> */}
+                </Button>
             </Field>
             {
                 status.message &&

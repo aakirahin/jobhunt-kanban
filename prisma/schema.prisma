@@ -21,7 +21,7 @@ model User {
   jobs                     Job[]
   sent_friend_requests     Friendship[] @relation("SentFriendRequests")
   received_friend_requests Friendship[] @relation("ReceivedFriendRequests")
-  columns                  Columns[]
+  columns                  Column[]
   created_at               DateTime     @default(now())
   updated_at               DateTime     @updatedAt
 }
@@ -44,26 +44,25 @@ model Friendship {
 }
 
 model Job {
-  id                String               @id @default(cuid())
-  user_id           String               @db.Uuid
-  user              User                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  title             String
-  company           String
-  location          String?
-  work_arrangement  WorkArrangement?
-  contract_type     ContractType?
-  url               String?
-  notes             String?
-  applicationStatus JobApplicationStatus @default(APPLIED)
-  applied_at        DateTime             @default(now())
-  created_at        DateTime             @default(now())
-  updated_at        DateTime             @updatedAt
+  id                  String               @id @default(cuid())
+  user_id             String               @db.Uuid
+  user                User                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  title               String
+  company             String
+  location            String?
+  work_arrangement    WorkArrangement?
+  contract_type       ContractType?
+  url                 String?
+  notes               String?
+  application_status  JobApplicationStatus @default(APPLIED) @map("applicationStatus")
+  created_at          DateTime             @default(now())
+  updated_at          DateTime             @updatedAt
 
   @@index([user_id])
-  @@index([user_id, applicationStatus])
+  @@index([user_id, application_status])
 }
 
-model Columns {
+model Column {
   id         String   @id @default(cuid())
   user_id    String   @db.Uuid
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -74,7 +73,6 @@ model Columns {
   updated_at DateTime @updatedAt
 
   @@index([user_id, position])
-  @@unique([user_id, position])
 }
 
 enum Status {
@@ -97,13 +95,13 @@ enum ContractType {
 enum JobApplicationStatus {
   SAVED
   APPLIED
-  INTERVIEW
-  OFFER
+  INTERVIEWED
+  ACCEPTED
   REJECTED
   WITHDRAWN
 }
 
-// Clean DB later, archive/prune old declined/canceled rows with a cron job.
+// TODO: Clean DB later, archive/prune old declined/canceled rows with a cron job.
 enum FriendshipStatus {
   PENDING
   ACCEPTED

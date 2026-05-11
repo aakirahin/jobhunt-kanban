@@ -5,7 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu"
+} from "../ui/dropdown-menu"
 
 type Props = {}
 
@@ -13,10 +13,7 @@ const Notification = (props: Props) => {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Bell 
-                    size={20} 
-                    className="cursor-pointer"
-                />
+                <Bell size={20} className="cursor-pointer"/>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-45 mt-2" align="end">
                 <DropdownMenuLabel>Notifications</DropdownMenuLabel>
