@@ -1,33 +1,116 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Jobhunt Kanban
+
+A full-stack job search tracker with a visual Kanban board. Organize your applications across stages, filter by role or location, drag-and-drop between columns, and connect with friends on the same hunt.
+
+## Features
+
+- **Kanban board** — track jobs across Saved, Applied, Interviewed, Accepted, and Rejected columns
+- **Custom columns** — create, rename, reorder, and color columns to match your workflow
+- **Job management** — add and edit jobs with title, company, location, work arrangement, contract type, URL, and notes
+- **Filtering** — filter jobs by title, location, work arrangement, contract type, and date range
+- **Drag and drop** — move jobs between columns and reorder columns
+- **Friend system** — send friend requests and view other users' boards
+- **Authentication** — email/password and Google OAuth via Supabase
+- **Auto-setup** — default columns are created automatically on first login
+
+## Tech Stack
+
+| | |
+|---|---|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Language | TypeScript 5 |
+| Styling | Tailwind CSS 4, shadcn/ui |
+| Database | PostgreSQL + Prisma 7 |
+| Auth | Supabase |
+| Data fetching | React Query 5 |
+| Drag and drop | dnd-kit |
+| Validation | Zod 4 |
+| Toasts | Sonner |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- A PostgreSQL database
+- A [Supabase](https://supabase.com) project with Google OAuth enabled
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Set up environment variables
+
+Create a `.env.local` file in the project root:
+
+```env
+DATABASE_URL=postgresql://user:password@host:port/dbname
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+```
+
+### 3. Set up the database
+
+```bash
+npx prisma migrate dev
+```
+
+### 4. Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev     # Start dev server (Turbopack)
+npm run build   # Generate Prisma client and build for production
+npm start       # Start production server
+npm run lint    # Run ESLint
+```
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+├── _components/        # UI components (KanbanBoard, JobDialog, TopBar, etc.)
+├── _context/           # Auth context
+├── api/                # API route handlers (jobs, columns)
+├── auth/               # Login/register page and OAuth callback
+├── user/[userId]/      # User dashboard, friends, and profile pages
+├── layout.tsx
+└── page.tsx            # Landing page
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+lib/
+├── prisma.ts           # Prisma client singleton
+├── dbUtils.ts          # First-login setup logic
+├── apiUtils.ts         # Auth middleware for API routes
+├── hooks/              # React Query hooks
+├── supabase/           # Supabase client helpers
+└── types.ts            # Shared TypeScript types
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+prisma/
+├── schema.prisma       # Database schema
+└── migrations/
+```
+
+## Database Schema
+
+- **User** — linked to Supabase auth, has columns, jobs, and friendships
+- **Job** — belongs to a user; tracks title, company, location, status, and more
+- **Column** — a Kanban column with a name, position, and hex color
+- **Friendship** — many-to-many between users with PENDING / ACCEPTED / DECLINED / CANCELED status
+
+## Supabase Setup Notes
+
+- Enable **Google OAuth** under Authentication → Providers
+- Enable **"Link email and OAuth accounts"** under Authentication → Sign In / Up to prevent duplicate accounts when the same email is used across providers
+- Add `http://localhost:3000/auth/callback` (and your production URL) to the allowed redirect URLs
 
 ## Deploy on Vercel
 
