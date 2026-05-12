@@ -1,39 +1,89 @@
 # Jobhunt Kanban
 
-A full-stack job search tracker with a visual Kanban board. Organize your applications across stages, filter by role or location, drag-and-drop between columns, and connect with friends on the same hunt.
+A full-stack job application tracker with a Kanban board, drag-and-drop, multi-dimension filtering, and Supabase authentication. Built with Next.js App Router, Prisma, PostgreSQL, and React Query.
 
-## Features
+## Technical Highlights
 
-- **Kanban board** — track jobs across Saved, Applied, Interviewed, Accepted, and Rejected columns
-- **Custom columns** — create, rename, reorder, and color columns to match your workflow
-- **Job management** — add and edit jobs with title, company, location, work arrangement, contract type, URL, and notes
-- **Filtering** — filter jobs by title, location, work arrangement, contract type, and date range
-- **Drag and drop** — move jobs between columns and reorder columns
-- **Friend system** — send friend requests and view other users' boards
-- **Authentication** — email/password and Google OAuth via Supabase
-- **Auto-setup** — default columns are created automatically on first login
+**SSR + client cache hydration** — The board page server-fetches the initial columns and jobs via Prisma, then calls `queryClient.setQueryData()` on the client to pre-populate the React Query cache. This avoids a loading flash on first render while keeping the client cache as the authoritative source for all subsequent mutations.
+
+**Optimistic updates with cache invalidation** — All job and column mutations (create, update, delete, reorder) update the React Query cache optimistically before the server response resolves. On error, React Query rolls back. On success, `invalidateQueries()` re-syncs with the database.
+
+**Drag-and-drop with position integrity** — `@dnd-kit` handles both column reordering and job card movement across columns. Dropping a card on a column automatically updates its `application_status`. Bulk column reordering uses `prisma.$transaction()` to update all positions atomically — preventing partial writes if one update fails.
+
+**`withAuth` middleware wrapper** — All API routes are protected by a composable `withAuth(handler)` wrapper that verifies the Supabase session server-side and injects the authenticated user into the handler, eliminating repeated auth boilerplate across routes.
+
+**Multi-layer Supabase auth** — Authentication is handled at three levels: a server client (cookie-based, for RSCs and API routes), a browser client (for client components), and a middleware layer for request-level cookie refresh. OAuth callback creates default Kanban columns on first signup via a `ensureDefaultColumns` transaction.
+
+**Client-side filtering without re-fetching** — Jobs are filtered across title, location, work arrangement, contract type, and date range entirely on the client against the cached dataset, so switching filters is instant with no additional network requests.
+
+## Architecture
+
+```
+app/
+  page.tsx                  # Landing page with auth form (email + Google OAuth)
+  user/[userId]/
+    page.tsx                # SSR: fetches board state, hydrates React Query cache
+    friends/                # Friend list and requests
+    profile/                # User profile
+  _components/
+    KanbanBoard/            # Board, SortableColumn, JobCard, drag-drop orchestration
+    JobDialog/              # Add/edit job form with validation
+    TopBar/                 # Filter bar, column management, add job
+    AuthForm/               # Login/register form
+  _context/
+    authentication.tsx      # useAuth() — global Supabase session context
+  api/
+    jobs/                   # GET (filtered), POST, DELETE
+    jobs/[id]/              # PATCH
+    columns/                # GET, POST, PATCH (reorder), DELETE
+
+lib/
+  prisma.ts                 # Prisma singleton with pg connection pool adapter
+  apiUtils.ts               # withAuth() middleware wrapper
+  dbUtils.ts                # ensureDefaultColumns() on first login
+  hooks/
+    jobs.ts                 # useJobs, useCreateJob, useUpdateJob, useDeleteJob
+    columns.ts              # useColumns, useCreateColumn, useReorderColumns
+  supabase/
+    server.ts               # Cookie-based server client
+    client.ts               # Browser client
+    middleware.ts           # Request-level session refresh
+
+prisma/
+  schema.prisma             # User, Job, Column, Friendship + enums
+```
+
+## Data Model
+
+```
+User        — linked to Supabase auth UID; has many Jobs, Columns, Friendships
+Job         — title, company, location, status, work_arrangement, contract_type, notes, url
+Column      — name, color (hex), position (int), user_id
+Friendship  — requester_id, addressee_id, status (PENDING | ACCEPTED | DECLINED | CANCELED)
+```
+
+**Enums:** `JobApplicationStatus` (SAVED, APPLIED, INTERVIEWED, ACCEPTED, REJECTED, WITHDRAWN) · `WorkArrangement` (REMOTE, HYBRID, ONSITE) · `ContractType` (FREELANCE, CONTRACT, PERMANENT) · `FriendshipStatus`
+
+**Indexes:** `(user_id, status)` and `(user_id, position)` for common board queries.
 
 ## Tech Stack
 
-| | |
-|---|---|
-| Framework | Next.js 16 (App Router, Turbopack) |
-| Language | TypeScript 5 |
-| Styling | Tailwind CSS 4, shadcn/ui |
-| Database | PostgreSQL + Prisma 7 |
-| Auth | Supabase |
-| Data fetching | React Query 5 |
-| Drag and drop | dnd-kit |
-| Validation | Zod 4 |
-| Toasts | Sonner |
+- **Next.js 16** (App Router, Turbopack) + TypeScript
+- **Prisma 7** + PostgreSQL (`@prisma/adapter-pg` for connection pooling)
+- **Supabase** — email/password + Google OAuth
+- **TanStack React Query 5** — server state, optimistic updates, cache invalidation
+- **@dnd-kit** — drag-and-drop (sortable, collision detection)
+- **Zod 4** — API input validation
+- **shadcn/ui** + Tailwind CSS 4
+- **Sonner** — toast notifications
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
-- A PostgreSQL database
-- A [Supabase](https://supabase.com) project with Google OAuth enabled
+- PostgreSQL database
+- [Supabase](https://supabase.com) project with Google OAuth enabled
 
 ### 1. Install dependencies
 
@@ -43,7 +93,7 @@ npm install
 
 ### 2. Set up environment variables
 
-Create a `.env.local` file in the project root:
+Create `.env.local`:
 
 ```env
 DATABASE_URL=postgresql://user:password@host:port/dbname
@@ -51,70 +101,30 @@ SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 ```
 
-### 3. Set up the database
+### 3. Run database migrations
 
 ```bash
 npx prisma migrate dev
 ```
 
-### 4. Run the development server
+### 4. Start the dev server
 
 ```bash
 npm run dev
+# → http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
-
-## Scripts
+## Available Scripts
 
 ```bash
 npm run dev     # Start dev server (Turbopack)
-npm run build   # Generate Prisma client and build for production
+npm run build   # Generate Prisma client + build for production
 npm start       # Start production server
 npm run lint    # Run ESLint
 ```
-
-## Project Structure
-
-```
-app/
-├── _components/        # UI components (KanbanBoard, JobDialog, TopBar, etc.)
-├── _context/           # Auth context
-├── api/                # API route handlers (jobs, columns)
-├── auth/               # Login/register page and OAuth callback
-├── user/[userId]/      # User dashboard, friends, and profile pages
-├── layout.tsx
-└── page.tsx            # Landing page
-
-lib/
-├── prisma.ts           # Prisma client singleton
-├── dbUtils.ts          # First-login setup logic
-├── apiUtils.ts         # Auth middleware for API routes
-├── hooks/              # React Query hooks
-├── supabase/           # Supabase client helpers
-└── types.ts            # Shared TypeScript types
-
-prisma/
-├── schema.prisma       # Database schema
-└── migrations/
-```
-
-## Database Schema
-
-- **User** — linked to Supabase auth, has columns, jobs, and friendships
-- **Job** — belongs to a user; tracks title, company, location, status, and more
-- **Column** — a Kanban column with a name, position, and hex color
-- **Friendship** — many-to-many between users with PENDING / ACCEPTED / DECLINED / CANCELED status
 
 ## Supabase Setup Notes
 
 - Enable **Google OAuth** under Authentication → Providers
 - Enable **"Link email and OAuth accounts"** under Authentication → Sign In / Up to prevent duplicate accounts when the same email is used across providers
 - Add `http://localhost:3000/auth/callback` (and your production URL) to the allowed redirect URLs
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# jobhunt-kanban
