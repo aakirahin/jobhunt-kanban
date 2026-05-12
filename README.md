@@ -14,7 +14,7 @@ A full-stack job application tracker with a Kanban board, drag-and-drop, multi-d
 
 **Multi-layer Supabase auth** — Authentication is handled at three levels: a server client (cookie-based, for RSCs and API routes), a browser client (for client components), and a middleware layer for request-level cookie refresh. OAuth callback creates default Kanban columns on first signup via a `ensureDefaultColumns` transaction.
 
-**Client-side filtering without re-fetching** — Jobs are filtered across title, location, work arrangement, contract type, and date range entirely on the client against the cached dataset, so switching filters is instant with no additional network requests.
+**Server-side filtering with per-combination caching** — Filter changes (title, location, work arrangement, contract type, date range) update the React Query cache key to `["jobs", activeFilters]`, triggering a fetch to `/api/jobs` where Prisma applies the filters. Each unique filter combination is cached for 30 seconds, so re-applying the same filters is instant but new combinations always hit the database.
 
 ## Architecture
 
@@ -42,8 +42,8 @@ lib/
   apiUtils.ts               # withAuth() middleware wrapper
   dbUtils.ts                # ensureDefaultColumns() on first login
   hooks/
-    jobs.ts                 # useJobs, useCreateJob, useUpdateJob, useDeleteJob
-    columns.ts              # useColumns, useCreateColumn, useReorderColumns
+    jobs.ts                 # useGetJobsQuery, useCreateJobMutation, useEditJobMutation, useDeleteJobsMutation, useMoveJobMutation
+    columns.ts              # useGetColumnsQuery, useEditColumnOrderMutation
   supabase/
     server.ts               # Cookie-based server client
     client.ts               # Browser client
