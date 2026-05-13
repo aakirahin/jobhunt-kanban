@@ -2,6 +2,8 @@
 
 A full-stack job application tracker with a Kanban board, drag-and-drop, multi-dimension filtering, and Supabase authentication. Built with Next.js App Router, Prisma, PostgreSQL, and React Query.
 
+> **Note:** This project is currently desktop-first. Mobile and tablet responsiveness is a work in progress.
+
 ## Technical Highlights
 
 **SSR + client cache hydration** — The board page server-fetches the initial columns and jobs via Prisma, then calls `queryClient.setQueryData()` on the client to pre-populate the React Query cache. This avoids a loading flash on first render while keeping the client cache as the authoritative source for all subsequent mutations.
@@ -21,6 +23,8 @@ A full-stack job application tracker with a Kanban board, drag-and-drop, multi-d
 ## Roadmap
 
 **Job report** *(in progress)* — A per-user analytics report covering application stats (response rate, interview rate, offer rate), timing insights (avg days applied → interview → offer), breakdowns by role/location/arrangement, and an AI-generated summary via the OpenAI API. The summary is generated from pre-computed structured stats rather than raw job data, keeping prompts small and costs minimal. The feature unlocks at 10 applications, with a preview shown below that threshold.
+
+**Browser extension** *(planned)* — A companion Chrome/Firefox extension that detects job applications submitted on third-party boards (LinkedIn, Indeed etc.) and automatically posts them to the kanban board. Content scripts scrape the job title and company from the page on form submission; a linked account token authenticates the POST to `/api/jobs`. This removes the manual tracking step entirely.
 
 **Friends & social layer** *(planned)* — The `Friendship` model and request/accept/decline flow are already in the schema. The planned surface includes a friends list, the ability to view a friend's board in a read-only mode, and comparison stats (e.g. response rates, activity trends) to add an accountability layer to the job search.
 
