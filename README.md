@@ -89,7 +89,6 @@ Friendship  — requester_id, addressee_id, status (PENDING | ACCEPTED | DECLINE
 - **Supabase** — email/password + Google OAuth
 - **TanStack React Query 5** — server state, optimistic updates, cache invalidation
 - **@dnd-kit** — drag-and-drop (sortable, collision detection)
-- **Zod 4** — API input validation
 - **shadcn/ui** + Tailwind CSS 4
 - **Sonner** — toast notifications
 
