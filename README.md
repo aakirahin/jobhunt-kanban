@@ -8,13 +8,11 @@ A full-stack job application tracker with a Kanban board, drag-and-drop, multi-d
 
 **SSR + client cache hydration** — The board page server-fetches the initial columns and jobs via Prisma, then calls `queryClient.setQueryData()` on the client to pre-populate the React Query cache. This avoids a loading flash on first render while keeping the client cache as the authoritative source for all subsequent mutations.
 
-**Optimistic updates with cache invalidation** — All job and column mutations (create, update, delete, reorder) update the React Query cache optimistically before the server response resolves. On error, React Query rolls back. On success, `invalidateQueries()` re-syncs with the database.
+**Optimistic updates with cache invalidation** — All job and column mutations update the React Query cache optimistically before the server response resolves. On error, React Query rolls back. On success, `invalidateQueries()` re-syncs with the database.
 
 **Drag-and-drop with position integrity** — `@dnd-kit` handles both column reordering and job card movement across columns. Dropping a card on a column automatically updates its `application_status`. Bulk column reordering uses `prisma.$transaction()` to update all positions atomically — preventing partial writes if one update fails.
 
 **`withAuth` middleware wrapper** — All API routes are protected by a composable `withAuth(handler)` wrapper that verifies the Supabase session server-side and injects the authenticated user into the handler, eliminating repeated auth boilerplate across routes.
-
-**Server-side filtering with per-combination caching** — Filter changes updates the React Query cache key to `["jobs", activeFilters]`, triggering a fetch to `/api/jobs` where Prisma applies them. The same combination is cached for 30 seconds; new combinations always hit the database.
 
 **Guest mode with localStorage persistence** — Unauthenticated users can try the full board at `/guest` without signing up. `GuestContext` stores jobs and columns in `localStorage`. All job hooks (`useGetJobsQuery`, `useCreateJobMutation`, etc.) check `useGuest()` first — if a guest session is active, mutations bypass the API entirely and write directly to the context state + localStorage. Filters are applied client-side via `applyGuestFilters()` rather than via a server fetch.
 
