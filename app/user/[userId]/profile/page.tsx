@@ -2,21 +2,17 @@
 
 import { Button } from '@/app/_components/ui/button'
 import { useAuth } from '@/app/_context/authentication'
-import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { useDeleteUserMutation } from '@/lib/hooks/users'
 import { buttonClass } from '@/lib/tailwindClasses'
 import { ShieldCheck } from 'lucide-react'
 import Image from 'next/image'
-import { toast } from 'sonner'
 
 const Page = () => {
   const { user } = useAuth()
-  const supabase = createSupabaseBrowserClient()
+  const { deleteUser } = useDeleteUserMutation()
 
-  const deleteUser = () => {
-    supabase.auth.admin.deleteUser(user.id, false)
-    supabase.auth.signOut()
-    toast.success("User deleted successfully!")
-    window.location.href="/"
+  const handleDelete = async () => {
+    deleteUser(user!.id)
   }
 
   return (
@@ -47,7 +43,7 @@ const Page = () => {
             <Button className={`${buttonClass} bg-gray-50`}>
               Edit profile
             </Button>
-            <Button className={`${buttonClass} bg-red-600 text-white`} onClick={deleteUser}>
+            <Button className={`${buttonClass} bg-red-600 text-white`} onClick={handleDelete}>
               Delete account
             </Button>
           </div>

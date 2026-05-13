@@ -24,7 +24,7 @@ const Column = ({
     const jobs = columnJobs[column.name.toUpperCase()] ?? []
     const { deleteJob } = useDeleteJobsMutation()
 
-    const handleDelete = async (jobId: string) => {
+    const handleDelete = (jobId: string) => {
         deleteJob(jobId)
     }
 

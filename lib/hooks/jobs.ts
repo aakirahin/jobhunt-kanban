@@ -38,9 +38,9 @@ const applyGuestFilters = (jobs: Job[], filters: JobFilters): Job[] =>
 export const useGetJobsQuery = (initialJobs: Job[] = [], filters: JobFilters = {}) => {
     const guest = useGuest()
     const activeFilters = Object.fromEntries(
-        Object.entries(filters).filter(([k, v]) => (v !== undefined && v !== "" && v.length > 0))
+        Object.entries(filters).filter(([k, v]) => (v !== undefined && v.length > 0))
     )
-    const params = new URLSearchParams(activeFilters as Record<string, string>).toString()
+    const params = new URLSearchParams(activeFilters).toString()
     const url = params ? `/api/jobs?${params}` : "/api/jobs"
 
     const { data: apiJobs = initialJobs } = useQuery<Job[]>({

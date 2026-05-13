@@ -35,13 +35,11 @@ const defaultForm = [
 const formType = {
     login: {
         label: "Login",
-        heading: "Hey there!",
         form: [...defaultForm],
         subtitle: "Don't have an account? Register instead.",
     },
     register: {
         label: "Register",
-        heading: "Good to see you!",
         form: [...defaultForm],
         subtitle: "Already have an account? Login instead.",
     }
@@ -50,7 +48,7 @@ const formType = {
 const AuthForm = () => {
     const [mode, setMode] = useState<Mode>("login")
     const [status, setStatus] = useState<Status>({ status: "", message: "" })
-    const { label, heading, form, subtitle } = formType[mode]
+    const { label, form, subtitle } = formType[mode]
     const supabase = createSupabaseBrowserClient()
     const { user } = useAuth()
 
@@ -130,7 +128,7 @@ const AuthForm = () => {
             className={divClass}
         >
             <FieldGroup key={mode} className="gap-4">
-                <h1 className="text-4xl mb-2 font-momo">{heading}</h1>
+                <h1 className="text-4xl mb-2 font-momo">{label}</h1>
                 {
                     form.map((input) => (
                         <Field key={input.id}>
