@@ -66,6 +66,7 @@ const JobDialog = ({
                 <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
                     <InputGroups job={job}/>
                     {/* TODO IMPLEMENT GOOGLE MAPS AUTOCOMPLETE */}
+                    {/* TODO ADD COMPANY SIZE + EMPLOYEES */}
                     <RadioGroups job={job}/>
                     <Field>
                         <FieldLabel htmlFor="notes">Notes</FieldLabel>

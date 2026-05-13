@@ -18,6 +18,7 @@ const JobCard = ({
     handleDelete,
     dragOverlay = false,
 }: Props) => {
+    console.log(job)
     const {
         title,
         company,
@@ -26,7 +27,7 @@ const JobCard = ({
         work_arrangement,
         contract_type,
         notes,
-        created_at
+        created_at = new Date()
     } = job
 
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -68,7 +69,7 @@ const JobCard = ({
                     <span className={pillClass}>{work_arrangement}</span>
                     <span className={pillClass}>{contract_type}</span>
                 </div>
-                {/* <span className={secondaryText}>{created_at.toLocaleDateString()}</span> */}
+                <span className={secondaryText}>{new Date(created_at).toLocaleDateString()}</span>
             </div>
         </div>
     )

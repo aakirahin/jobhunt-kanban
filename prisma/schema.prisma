@@ -49,9 +49,12 @@ model Job {
   user                User                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
   title               String
   company             String
+  salary              Int?
   location            String
-  work_arrangement    WorkArrangement?
-  contract_type       ContractType?
+  work_arrangement    WorkArrangement
+  contract_type       ContractType
+  company_size        CompanySize?
+  employees           Int?
   url                 String?
   notes               String?
   application_status  JobApplicationStatus @default(APPLIED) @map("applicationStatus")
@@ -90,6 +93,13 @@ enum ContractType {
   FREELANCE
   CONTRACT
   PERMANENT
+}
+
+enum CompanySize {
+  STARTUP
+  SMALL
+  MEDIUM
+  LARGE
 }
 
 enum JobApplicationStatus {

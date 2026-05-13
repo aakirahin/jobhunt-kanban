@@ -12,9 +12,17 @@ A full-stack job application tracker with a Kanban board, drag-and-drop, multi-d
 
 **`withAuth` middleware wrapper** — All API routes are protected by a composable `withAuth(handler)` wrapper that verifies the Supabase session server-side and injects the authenticated user into the handler, eliminating repeated auth boilerplate across routes.
 
-**Multi-layer Supabase auth** — Authentication is handled at three levels: a server client (cookie-based, for RSCs and API routes), a browser client (for client components), and a middleware layer for request-level cookie refresh. OAuth callback creates default Kanban columns on first signup via a `ensureDefaultColumns` transaction.
+**Server-side filtering with per-combination caching** — Filter changes updates the React Query cache key to `["jobs", activeFilters]`, triggering a fetch to `/api/jobs` where Prisma applies them. The same combination is cached for 30 seconds; new combinations always hit the database.
 
-**Server-side filtering with per-combination caching** — Filter changes (title, location, work arrangement, contract type, date range) update the React Query cache key to `["jobs", activeFilters]`, triggering a fetch to `/api/jobs` where Prisma applies the filters. Each unique filter combination is cached for 30 seconds, so re-applying the same filters is instant but new combinations always hit the database.
+**Guest mode with localStorage persistence** — Unauthenticated users can try the full board at `/guest` without signing up. `GuestContext` stores jobs and columns in `localStorage`. All job hooks (`useGetJobsQuery`, `useCreateJobMutation`, etc.) check `useGuest()` first — if a guest session is active, mutations bypass the API entirely and write directly to the context state + localStorage. Filters are applied client-side via `applyGuestFilters()` rather than via a server fetch.
+
+**Account deletion via Supabase Admin API** — `DELETE /api/users` uses the Supabase service role key to instantiate an admin client and call `auth.admin.deleteUser()`, removing the user from Supabase Auth. Cascade deletes defined in the Prisma schema handle the associated database records.
+
+## Roadmap
+
+**Job report** *(in progress)* — A per-user analytics report covering application stats (response rate, interview rate, offer rate), timing insights (avg days applied → interview → offer), breakdowns by role/location/arrangement, and an AI-generated summary via the OpenAI API. The summary is generated from pre-computed structured stats rather than raw job data, keeping prompts small and costs minimal. The feature unlocks at 10 applications, with a preview shown below that threshold.
+
+**Friends & social layer** *(planned)* — The `Friendship` model and request/accept/decline flow are already in the schema. The planned surface includes a friends list, the ability to view a friend's board in a read-only mode, and comparison stats (e.g. response rates, activity trends) to add an accountability layer to the job search.
 
 ## Architecture
 
@@ -32,10 +40,15 @@ app/
     AuthForm/               # Login/register form
   _context/
     authentication.tsx      # useAuth() — global Supabase session context
+    guest.tsx               # GuestContext — localStorage-backed jobs/columns for unauthenticated users
   api/
     jobs/                   # GET (filtered), POST, DELETE
     jobs/[id]/              # PATCH
     columns/                # GET, POST, PATCH (reorder), DELETE
+    users/                  # DELETE (account deletion via Supabase Admin API)
+  guest/
+    layout.tsx              # Guest layout (sidebar + topbar, no auth)
+    page.tsx                # Guest board — mounts GuestProvider, renders Board
 
 lib/
   prisma.ts                 # Prisma singleton with pg connection pool adapter
@@ -44,6 +57,7 @@ lib/
   hooks/
     jobs.ts                 # useGetJobsQuery, useCreateJobMutation, useEditJobMutation, useDeleteJobsMutation, useMoveJobMutation
     columns.ts              # useGetColumnsQuery, useEditColumnOrderMutation
+    users.ts                # useDeleteUserMutation
   supabase/
     server.ts               # Cookie-based server client
     client.ts               # Browser client
@@ -63,8 +77,6 @@ Friendship  — requester_id, addressee_id, status (PENDING | ACCEPTED | DECLINE
 ```
 
 **Enums:** `JobApplicationStatus` (SAVED, APPLIED, INTERVIEWED, ACCEPTED, REJECTED, WITHDRAWN) · `WorkArrangement` (REMOTE, HYBRID, ONSITE) · `ContractType` (FREELANCE, CONTRACT, PERMANENT) · `FriendshipStatus`
-
-**Indexes:** `(user_id, status)` and `(user_id, position)` for common board queries.
 
 ## Tech Stack
 
@@ -99,6 +111,7 @@ Create `.env.local`:
 DATABASE_URL=postgresql://user:password@host:port/dbname
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
 ### 3. Run database migrations

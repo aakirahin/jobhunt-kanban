@@ -6,6 +6,7 @@ import DateFilterButton from './DateFilterButton'
 import AddJob from '../JobDialog/AddJob'
 import { Job } from '@/lib/types'
 import { DateRange } from 'react-day-picker'
+import GenerateJobReport from './GenerateJobReport'
 
 type Props = {
     jobs: Job[]
@@ -89,10 +90,7 @@ const FilterBar = ({
             </div>
             <div className='flex gap-2'>
                 <AddJob/>
-                <Button className={`bg-linear-to-r from-blue-400 to-purple-400 text-white rounded-full flex gap-1 items-center ${buttonClass}`}>
-                    <Sparkles size={20}/>
-                    Generate job report
-                </Button>
+                <GenerateJobReport/>
             </div>
         </div>
     )
