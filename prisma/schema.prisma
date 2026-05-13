@@ -49,7 +49,7 @@ model Job {
   user                User                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
   title               String
   company             String
-  location            String?
+  location            String
   work_arrangement    WorkArrangement?
   contract_type       ContractType?
   url                 String?

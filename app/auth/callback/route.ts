@@ -9,12 +9,13 @@ export const GET = async (request: NextRequest) => {
     if (!code) return NextResponse.redirect(`${origin}/auth?error=missing_code`)
 
     const supabase = await createSupabaseServerClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (error) return NextResponse.redirect(`${origin}/auth?error=auth_failed`)
+    const { error, data } = await supabase.auth.exchangeCodeForSession(code)
+    if (error || !data.user) return NextResponse.redirect(`${origin}/auth?error=auth_failed`)
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) await ensureDefaultColumns(user)
-    else return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-
-    return NextResponse.redirect(`${origin}/user/${user?.id}`)
+    try {
+        await ensureDefaultColumns(data.user)
+        return NextResponse.redirect(`${origin}/user/${data.user?.id}`)
+    } catch (err) {
+        return NextResponse.redirect(`${origin}/auth?error=setup_failed`)
+    }
 }

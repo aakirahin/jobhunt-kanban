@@ -1,4 +1,5 @@
 import type { User as SupabaseUser } from "@supabase/supabase-js"
+import { PrismaClientKnownRequestError } from "@/lib/generated/prisma/internal/prismaNamespace"
 import prisma from "@/lib/prisma"
 
 export const defaultColumns = [
@@ -15,12 +16,10 @@ export const ensureDefaultColumns = async (authUser: SupabaseUser) => {
         ? authUser.user_metadata.avatar_url
         : null
 
-    await prisma.$transaction(async (tx) => {
-        await tx.user.upsert({
+    try {
+        await prisma.user.upsert({
             where: { id: authUser.id },
-            update: {
-                email: authUser.email ?? undefined,
-            },
+            update: {},
             create: {
                 id: authUser.id,
                 email: authUser.email!,
@@ -28,20 +27,38 @@ export const ensureDefaultColumns = async (authUser: SupabaseUser) => {
                 avatar: avatarFromMetadata,
             },
         })
-
-        const columnCount = await tx.column.count({
-            where: { user_id: authUser.id },
-        })
-
-        if (columnCount === 0) {
-            await tx.column.createMany({
-                data: defaultColumns.map((column) => ({
-                    user_id: authUser.id,
-                    name: column.name,
-                    position: column.position,
-                    colour: column.colour,
-                })),
+    } catch (err) {
+        // P2002 = unique constraint violation on email:
+        // a stale user row exists with the same email but a different UUID
+        // (happens when Supabase auth is reset but the DB is not).
+        // Delete the stale row (cascades to columns/jobs) and retry.
+        if (err instanceof PrismaClientKnownRequestError && err.code === "P2002") {
+            await prisma.user.delete({ where: { email: authUser.email! } })
+            await prisma.user.create({
+                data: {
+                    id: authUser.id,
+                    email: authUser.email!,
+                    name: authUser.user_metadata.name ?? undefined,
+                    avatar: avatarFromMetadata,
+                },
             })
+        } else {
+            throw err
         }
+    }
+
+    const columnCount = await prisma.column.count({
+        where: { user_id: authUser.id },
     })
+
+    if (columnCount === 0) {
+        await prisma.column.createMany({
+            data: defaultColumns.map((column) => ({
+                user_id: authUser.id,
+                name: column.name,
+                position: column.position,
+                colour: column.colour,
+            })),
+        })
+    }
 }

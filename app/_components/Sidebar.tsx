@@ -6,23 +6,30 @@ import Link from 'next/link'
 import { useAuth } from '../_context/authentication'
 import { usePathname } from 'next/navigation'
 
+type Props = {
+    guest?: boolean
+}
 
-const Sidebar = () => {
+const Sidebar = ({
+    guest = false
+}: Props) => {
     const { user } = useAuth()
     const selected = usePathname()
-
-    const links = [
+    const defaultLinks = [
         {
             id: "home",
             label: "Home",
             icon: <House size={16}/>,
-            href: `/user/${user?.id}`
-        },
+            href: guest ? "/guest" : `/user/${user?.id}`,
+        }
+    ]
+    const links = guest ? defaultLinks : [
+        ...defaultLinks,
         {
             id: "friends",
             label: "Friends",
             icon: <Users size={16}/>,
-            href: `/user/${user?.id}/friends`
+            href: `/user/${user?.id}/friends`,
         },
     ]
 

@@ -1,20 +1,22 @@
-"use client"
-
 import { Input } from '../ui/input'
 import Notification from './Notification'
 import Avatar from './Avatar'
-import { useAuth } from '../../_context/authentication'
+import { User } from '@supabase/supabase-js'
 
-const TopBar = () => {
-    const { user } = useAuth()
+type Props = 
+    { user: null, guest: true } | 
+    { user: User | null, guest: false }
 
-    // TODO: ADD FUNCTIONALITY TO INPUT
+const TopBar = ({
+    user,
+    guest
+}: Props) => {
     return (
         <div className="flex justify-between">
             <Input className="w-1/5" placeholder="Search"/>
             <div className="flex gap-4 items-center">
                 <Notification/>
-                <Avatar user={user}/>
+                <Avatar user={user} guest={guest}/>
             </div>
         </div>
     )

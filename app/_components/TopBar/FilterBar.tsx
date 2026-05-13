@@ -18,7 +18,7 @@ type Props = {
 type FilterDef = {
     id: keyof Job
     label: string
-    options?: string[]
+    options?: { id: string, label: string }[]
 }
 
 const filterDefs: FilterDef[] = [
@@ -33,20 +33,18 @@ const filterDefs: FilterDef[] = [
     { 
         id: "work_arrangement",
         label: "Work arrangement",
-        options: [
-            "Remote",
-            "Hybrid",
-            "Onsite"
-        ]
+        options: ["Remote", "Hybrid", "Onsite"].map((wa) => ({
+            id: wa.toUpperCase(),
+            label: wa
+        }))
     },
     { 
         id: "contract_type",
         label: "Contract type",
-        options: [
-            "Permanent",
-            "Contract",
-            "Freelance"
-        ]
+        options: ["Permanent", "Contract", "Freelance"].map((ct) => ({
+            id: ct.toUpperCase(),
+            label: ct
+        }))
     },
 ]
 
@@ -63,8 +61,8 @@ const FilterBar = ({
         options: options ? options : [
             ...new Set(
                 jobs
-                .map((job) => (job[id] as string))
-                .filter((v: string) => v !== null && v !== "")
+                .map((job) => ({ id: job[id], label: job[id] }))
+                .filter((v) => v.id !== null && v.id !== "")
             ),
         ],
     }))

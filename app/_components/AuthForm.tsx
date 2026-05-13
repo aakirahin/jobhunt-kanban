@@ -9,13 +9,16 @@ import {
 import { Input } from "../_components/ui/input"
 import { Button } from "../_components/ui/button"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
-import { Check, X } from "lucide-react"
+import { Check, CircleUser, X } from "lucide-react"
 import { buttonClass, inputClass } from "@/lib/tailwindClasses"
 import { Separator } from "./ui/separator"
 import Image from "next/image"
 import { Status } from "@/lib/types"
+import { useAuth } from "../_context/authentication"
 
 type Mode = "login" | "register"
+
+const divClass = "bg-white rounded-[20px] border shadow-[0px_6px_0px_#3A3A3A] flex flex-col p-8 gap-6 w-1/5"
 
 const defaultForm = [
     {
@@ -32,7 +35,7 @@ const defaultForm = [
 const formType = {
     login: {
         label: "Login",
-        heading: "Welcome back!",
+        heading: "Hey there!",
         form: [...defaultForm],
         subtitle: "Don't have an account? Register instead.",
     },
@@ -49,9 +52,8 @@ const AuthForm = () => {
     const [status, setStatus] = useState<Status>({ status: "", message: "" })
     const { label, heading, form, subtitle } = formType[mode]
     const supabase = createSupabaseBrowserClient()
+    const { user } = useAuth()
 
-    // TODO: WHAT TO SHOW IF USER ALREADY AUTHENTICATED
-    
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
 
@@ -91,15 +93,41 @@ const AuthForm = () => {
             provider: "google",
             options: {
                 redirectTo: `${window.location.origin}/auth/callback`,
+                skipBrowserRedirect: false
             },
         })
     }
 
-    return (
+    const handleSignOut = async () => {
+        await supabase.auth.signOut()
+        window.location.href = '/'
+    }
+
+    return user ?
+        <div className={divClass}>
+            <h1 className="text-4xl mb-2 font-momo">
+                Welcome back!
+            </h1>
+            <p>You're already logged in as {user.email}.</p>
+            <div className="flex flex-col gap-3 w-full">
+                <Button 
+                    className={`bg-gray-50 py-4.5 w-full ${buttonClass}`} 
+                    onClick={() => window.location.href = `/user/${user.id}`}
+                >
+                    Continue to board
+                </Button>
+                <Button 
+                    className={`bg-red-600 text-white py-4.5 w-full ${buttonClass}`}
+                    onClick={handleSignOut}
+                >
+                    Log out
+                </Button>
+            </div>
+        </div> :
         <form 
             onSubmit={handleSubmit}
             method="post"
-            className="bg-white rounded-[20px] border shadow-[0px_6px_0px_#3A3A3A] flex flex-col p-8 gap-6 w-1/5 items-center"
+            className={divClass}
         >
             <FieldGroup key={mode} className="gap-4">
                 <h1 className="text-4xl mb-2 font-momo">{heading}</h1>
@@ -139,6 +167,14 @@ const AuthForm = () => {
                     />
                     Continue with Google
                 </Button>
+                <Button 
+                    type="reset"
+                    onClick={() => window.location.href = "/guest"}
+                    className={`bg-gray-50 py-4.5 w-full flex items-middle ${buttonClass}`}
+                >
+                    <CircleUser size={14}/>
+                    Continue as guest
+                </Button>
             </Field>
             {
                 status.message &&
@@ -148,7 +184,6 @@ const AuthForm = () => {
                 </span>
             }
         </form>
-    )
 }
 
 export default AuthForm

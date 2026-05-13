@@ -11,16 +11,26 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu"
-import { LogOut, Settings, User as UserIcon } from 'lucide-react'
+import { LogIn, LogOut, User as UserIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import React from 'react'
 
 type Props = {
     user: User | null
+    guest?: boolean
 }
 
+type MenuItem = {
+    id: string
+    label: string
+    icon: React.ReactNode
+    onClick: () => void
+    variant: "default" | "destructive"
+}
 
 const Avatar = ({
-    user
+    user,
+    guest = false
 }: Props) => {
     const router = useRouter()
     const supabase = createSupabaseBrowserClient()
@@ -30,18 +40,23 @@ const Avatar = ({
         window.location.href = '/'
     }
     
-    const menuItems = [
+    const menuItems: MenuItem[] = guest ? 
+    [
+        {
+            id: "authenticate",
+            label: "Login / Register",
+            icon: <LogIn size={20}/>,
+            onClick: () => router.push("/"),
+            variant: "default"
+        }
+    ] :
+    [
         {
             id: "profile",
             label: "Profile",
             icon: <UserIcon size={20}/>,
-            onClick: () => router.push(`/user/${user?.id}/account`)
-        },
-        {
-            id: "settings",
-            label: "Settings",
-            icon: <Settings size={20}/>,
-            onClick: () => router.push(`/user/${user?.id}/settings`)
+            onClick: () => router.push(`/user/${user?.id}/profile`),
+            variant: "default"
         },
         {
             id: "logout",
@@ -52,13 +67,11 @@ const Avatar = ({
         },
     ]
 
-    console.log(user)
-
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Image
-                    src={user?.user_metadata.avatar_url}
+                    src={user?.user_metadata.avatar_url ?? "/avatar-default.png"}
                     alt="Avatar"
                     width={36}
                     height={36}
@@ -74,7 +87,7 @@ const Avatar = ({
                                 key={item.id}
                                 onClick={item.onClick} 
                                 variant={item.variant}
-                                className={`p-2 my-1 text-muted-foreground items-center cursor-pointer`}
+                                className={`p-2 my-1 items-center cursor-pointer`}
                             >
                                 {item.icon}
                                 {item.label}

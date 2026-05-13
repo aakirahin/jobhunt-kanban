@@ -26,7 +26,7 @@ const DateFilterButton = ({
                     Date
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 mt-2" align="start">
+            <PopoverContent className="w-auto p-0 mt-2 border shadow-[0px_4px_0px_#3A3A3A]" align="start">
                 <Calendar
                     mode="range"
                     selected={dateRange}

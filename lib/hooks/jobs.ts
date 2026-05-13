@@ -4,40 +4,65 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { Job } from "../types"
 import { toast } from "sonner"
 import { queryClient } from "@/app/providers"
+import { useGuest } from "@/app/_context/guest"
 
 export type JobFilters = {
-    title?: string
-    location?: string
-    work_arrangement?: string
-    contract_type?: string
-    application_status?: string
+    title?: string[]
+    location?: string[]
+    work_arrangement?: string[]
+    contract_type?: string[]
     from?: Date | undefined
     to?: Date | undefined
 }
 
+const applyGuestFilters = (jobs: Job[], filters: JobFilters): Job[] =>
+    jobs.filter((job) => {
+        const { 
+            title, 
+            location, 
+            work_arrangement, 
+            contract_type, 
+            from, 
+            to 
+        } = filters
+
+        if (title && !title.includes(job.title)) return false
+        if (location && !location.includes(job.location)) return false
+        if (work_arrangement && !work_arrangement.includes(job.work_arrangement)) return false
+        if (contract_type && !contract_type.includes(job.contract_type)) return false
+        if (from && new Date(job.created_at) < from) return false
+        if (to && new Date(job.created_at) > to) return false
+        return true
+    })
+
 export const useGetJobsQuery = (initialJobs: Job[] = [], filters: JobFilters = {}) => {
+    const guest = useGuest()
     const activeFilters = Object.fromEntries(
-        Object.entries(filters).filter(([k, v]) => (v !== undefined && v !== ""))
+        Object.entries(filters).filter(([k, v]) => (v !== undefined && v !== "" && v.length > 0))
     )
     const params = new URLSearchParams(activeFilters as Record<string, string>).toString()
     const url = params ? `/api/jobs?${params}` : "/api/jobs"
 
-    const { data: jobs = initialJobs } = useQuery<Job[]>({
+    const { data: apiJobs = initialJobs } = useQuery<Job[]>({
         queryKey: ["jobs", activeFilters],
         queryFn: async () => {
             const res = await fetch(url)
             if (!res.ok) toast.error("Failed to fetch jobs")
             return res.json()
         },
-        initialData: Object.keys(activeFilters).length === 0 ? initialJobs : undefined,
+        initialData: !guest && Object.keys(activeFilters).length === 0 ? initialJobs : undefined,
         staleTime: 30_000,
+        enabled: !guest,
     })
 
-    return { jobs }
+    if (guest) return { jobs: applyGuestFilters(guest.jobs, activeFilters) }
+    return { jobs: apiJobs }
 }
 
 export const useCreateJobMutation = (setOpen: (open: boolean) => void) => {
-    const { mutate: createJob } = useMutation({
+    const guest = useGuest()
+
+    const { mutate: apiCreateJob } = useMutation({
         mutationKey: ["jobs"],
         mutationFn: async (newJob: Job) => {
             const res = await fetch('/api/jobs', {
@@ -50,16 +75,16 @@ export const useCreateJobMutation = (setOpen: (open: boolean) => void) => {
         },
         onMutate: async (newJob: Job) => {
             await queryClient.cancelQueries({ queryKey: ['jobs'] })
-            const previousJobs = queryClient.getQueryData<Job[]>(['jobs'])
-            queryClient.setQueryData<Job[]>(['jobs'], (prev = []) => [...prev, newJob as unknown as Job])
-            return { previousJobs }
+            const previousData = queryClient.getQueriesData<Job[]>({ queryKey: ['jobs'] })
+            queryClient.setQueriesData<Job[]>({ queryKey: ['jobs'] }, (prev = []) => [...prev, newJob as unknown as Job])
+            return { previousData }
         },
         onSuccess: () => {
             toast.success("New job successfully added!")
             setOpen(false)
         },
         onError: (_err, _newJob, context) => {
-            queryClient.setQueryData<Job[]>(['jobs'], context?.previousJobs)
+            context?.previousData.forEach(([key, data]) => queryClient.setQueryData(key, data))
             toast.error("Something went wrong. Please try again later.")
         },
         onSettled: () => {
@@ -67,11 +92,25 @@ export const useCreateJobMutation = (setOpen: (open: boolean) => void) => {
         },
     })
 
-    return { createJob }
+    if (guest) {
+        return {
+            createJob: (newJob: Job) => {
+                const now = new Date()
+                const jobWithId: Job = { ...newJob, id: crypto.randomUUID(), created_at: now, updated_at: now }
+                guest.setJobs([...guest.jobs, jobWithId])
+                toast.success("New job successfully added!")
+                setOpen(false)
+            }
+        }
+    }
+
+    return { createJob: apiCreateJob }
 }
 
 export const useEditJobMutation = (setOpen: (open: boolean) => void) => {
-    const { mutate: editJob } = useMutation({
+    const guest = useGuest()
+
+    const { mutate: apiEditJob } = useMutation({
         mutationKey: ["jobs"],
         mutationFn: async (updatedJob: Job) => {
             const res = await fetch(`/api/jobs/${updatedJob.id}`, {
@@ -84,16 +123,18 @@ export const useEditJobMutation = (setOpen: (open: boolean) => void) => {
         },
         onMutate: async (updatedJob: Job) => {
             await queryClient.cancelQueries({ queryKey: ['jobs'] })
-            const previousJobs = queryClient.getQueryData<Job[]>(['jobs'])
-            queryClient.setQueryData<Job[]>(['jobs'], (prev = []) => [...prev, updatedJob as unknown as Job])
-            return { previousJobs }
+            const previousData = queryClient.getQueriesData<Job[]>({ queryKey: ['jobs'] })
+            queryClient.setQueriesData<Job[]>({ queryKey: ['jobs'] }, (prev = []) =>
+                prev.map((job) => job.id === updatedJob.id ? { ...job, ...updatedJob } : job)
+            )
+            return { previousData }
         },
         onSuccess: () => {
             toast.success("Updated job successfully!")
             setOpen(false)
         },
         onError: (_err, _updatedJob, context) => {
-            queryClient.setQueryData<Job[]>(['jobs'], context?.previousJobs)
+            context?.previousData.forEach(([key, data]) => queryClient.setQueryData(key, data))
             toast.error("Something went wrong. Please try again later.")
         },
         onSettled: () => {
@@ -101,11 +142,27 @@ export const useEditJobMutation = (setOpen: (open: boolean) => void) => {
         },
     })
 
-    return { editJob }
+    if (guest) {
+        return {
+            editJob: (updatedJob: Job) => {
+                guest.setJobs(
+                    guest.jobs.map((job) =>
+                        job.id === updatedJob.id ? { ...job, ...updatedJob, updated_at: new Date() } : job
+                    )
+                )
+                toast.success("Updated job successfully!")
+                setOpen(false)
+            }
+        }
+    }
+
+    return { editJob: apiEditJob }
 }
 
 export const useDeleteJobsMutation = () => {
-    const { mutate: deleteJob } = useMutation({
+    const guest = useGuest()
+
+    const { mutate: apiDeleteJob } = useMutation({
         mutationKey: ["jobs"],
         mutationFn: async (jobId: string) => {
             const res = await fetch('/api/jobs', {
@@ -118,17 +175,17 @@ export const useDeleteJobsMutation = () => {
         },
         onMutate: async (jobId: string) => {
             await queryClient.cancelQueries({ queryKey: ['jobs'] })
-            const previousJobs = queryClient.getQueryData<Job[]>(['jobs'])
-            queryClient.setQueryData<Job[]>(['jobs'], (prev = []) =>
+            const previousData = queryClient.getQueriesData<Job[]>({ queryKey: ['jobs'] })
+            queryClient.setQueriesData<Job[]>({ queryKey: ['jobs'] }, (prev = []) =>
                 prev.filter((job) => job.id !== jobId)
             )
-            return { previousJobs }
+            return { previousData }
         },
         onSuccess: () => {
             toast.success("Job deleted successfully!")
         },
         onError: (_err, _jobId, context) => {
-            queryClient.setQueryData<Job[]>(['jobs'], context?.previousJobs)
+            context?.previousData.forEach(([key, data]) => queryClient.setQueryData(key, data))
             toast.error("Something went wrong. Please try again later.")
         },
         onSettled: () => {
@@ -136,11 +193,22 @@ export const useDeleteJobsMutation = () => {
         },
     })
 
-    return { deleteJob }
+    if (guest) {
+        return {
+            deleteJob: (jobId: string) => {
+                guest.setJobs(guest.jobs.filter((job) => job.id !== jobId))
+                toast.success("Job deleted successfully!")
+            }
+        }
+    }
+
+    return { deleteJob: apiDeleteJob }
 }
 
 export const useMoveJobMutation = () => {
-    const { mutate: moveJob } = useMutation({
+    const guest = useGuest()
+
+    const { mutate: apiMoveJob } = useMutation({
         mutationFn: async ({ jobId, application_status }: { jobId: string; application_status: string }) => {
             const res = await fetch(`/api/jobs/${jobId}`, {
                 method: 'PATCH',
@@ -152,16 +220,18 @@ export const useMoveJobMutation = () => {
         },
         onMutate: async ({ jobId, application_status }) => {
             await queryClient.cancelQueries({ queryKey: ['jobs'] })
-            const previousJobs = queryClient.getQueryData<Job[]>(['jobs'])
-            queryClient.setQueryData<Job[]>(['jobs'], (prev = []) =>
+            const previousData = queryClient.getQueriesData<Job[]>({ queryKey: ['jobs'] })
+            queryClient.setQueriesData<Job[]>({ queryKey: ['jobs'] }, (prev = []) =>
                 prev.map((job) =>
                     job.id === jobId ? { ...job, application_status: application_status as Job['application_status'] } : job
                 )
             )
-            return { previousJobs }
+            return { previousData }
         },
         onError: (_err, _vars, context) => {
-            queryClient.setQueryData(['jobs'], context?.previousJobs)
+            context?.previousData.forEach(([key, data]) => {
+                queryClient.setQueryData(key, data)
+            })
             toast.error("Failed to move job. Please try again.")
         },
         onSettled: () => {
@@ -169,5 +239,19 @@ export const useMoveJobMutation = () => {
         },
     })
 
-    return { moveJob }
+    if (guest) {
+        return {
+            moveJob: ({ jobId, application_status }: { jobId: string; application_status: string }) => {
+                guest.setJobs(
+                    guest.jobs.map((job) =>
+                        job.id === jobId
+                            ? { ...job, application_status: application_status as Job['application_status'] }
+                            : job
+                    )
+                )
+            }
+        }
+    }
+
+    return { moveJob: apiMoveJob }
 }

@@ -1,24 +1,17 @@
-"use client"
-
-import Sidebar from "@/app/_components/Sidebar"
 import TopBar from "@/app/_components/TopBar/TopBar"
 import { Toaster } from "@/app/_components/ui/sonner"
-import { useAuth } from "@/app/_context/authentication"
+import Sidebar from "../_components/Sidebar"
 
-type Props = { 
-    children: React.ReactNode 
+type Props = {
+    children: React.ReactNode
 }
 
-const Layout = ({ 
-    children 
-}: Props) => {
-    const { user } = useAuth()
-
+const GuestLayout = ({ children }: Props) => {
     return (
         <div className="flex">
-            <Sidebar/>
+            <Sidebar guest/>
             <div className="bg-white rounded-[20px] min-h-[calc(100vh-2rem)] w-full m-4 p-6 ml-0 flex flex-col gap-2">
-                <TopBar user={user} guest={false}/>
+                <TopBar user={null} guest/>
                 <Toaster/>
                 {children}
             </div>
@@ -26,4 +19,4 @@ const Layout = ({
     )
 }
 
-export default Layout
+export default GuestLayout

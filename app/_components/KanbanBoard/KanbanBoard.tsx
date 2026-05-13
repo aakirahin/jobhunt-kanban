@@ -19,7 +19,6 @@ import {
 import { BoardColumn, Job } from "@/lib/types"
 import SortableColumn from "./SortableColumn"
 import { useEditColumnOrderMutation } from "@/lib/hooks/columns"
-import { useGetColumnsQuery } from "@/lib/hooks/columns"
 import { useMoveJobMutation } from "@/lib/hooks/jobs"
 import JobCard from "./JobCard"
 
@@ -32,11 +31,10 @@ const KanbanBoard = ({
     initialColumns,
     columnJobs
 }: Props) => {
-    const { columns = initialColumns } = useGetColumnsQuery(initialColumns)
     const { editColumnOrder } = useEditColumnOrderMutation()
     const { moveJob } = useMoveJobMutation()
     const [boardColumns, setBoardColumns] = useState<BoardColumn[]>(
-        [...columns].sort((a, b) => a.position - b.position),
+        [...initialColumns].sort((a, b) => a.position - b.position),
     )
     const columnIds = useMemo(() => boardColumns.map((column) => column.id), [boardColumns])
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))

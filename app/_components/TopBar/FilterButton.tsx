@@ -15,7 +15,7 @@ type Props = {
     filter: {
         id: keyof Job
         label: string
-        options: string[]
+        options?: { id: string, label: string }[]
     }
     selectedValues: string[]
     onSelection: (values: string[]) => void
@@ -47,14 +47,14 @@ const FilterButton = ({
                 <DropdownMenuLabel>{label}</DropdownMenuLabel>
                 <DropdownMenuGroup>
                     {
-                        options.map((o) => (
+                        options?.map((o) => (
                             <DropdownMenuItem
-                                key={`${id}_${o}`}
+                                key={`${id}_${o.id}`}
                                 onSelect={(e) => e.preventDefault()}
-                                onClick={() => toggle(o)}
+                                onClick={() => toggle(o.id)}
                             >
-                                <Checkbox checked={selectedValues.includes(o)} onCheckedChange={() => toggle(o)}/>
-                                {o}
+                                <Checkbox checked={selectedValues.includes(o.id)} onCheckedChange={() => toggle(o.id)}/>
+                                {o.label}
                             </DropdownMenuItem>
                         ))
                     }
