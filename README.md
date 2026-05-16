@@ -8,7 +8,7 @@ A full-stack job application tracker with a Kanban board, drag-and-drop, multi-d
 
 **SSR + client cache hydration** — The board page server-fetches the initial columns and jobs via Prisma, then calls `queryClient.setQueryData()` on the client to pre-populate the React Query cache. This avoids a loading flash on first render while keeping the client cache as the authoritative source for all subsequent mutations.
 
-**Optimistic updates with cache invalidation** — All job and column mutations (create, update, delete, reorder) update the React Query cache optimistically before the server response resolves. On error, React Query rolls back. On success, `invalidateQueries()` re-syncs with the database.
+**Optimistic updates with cache invalidation** — All job and column mutations update the React Query cache optimistically before the server response resolves. On error, React Query rolls back. On success, `invalidateQueries()` re-syncs with the database.
 
 **Drag-and-drop with position integrity** — `@dnd-kit` handles both column reordering and job card movement across columns. Dropping a card on a column automatically updates its `application_status`. Bulk column reordering uses `prisma.$transaction()` to update all positions atomically — preventing partial writes if one update fails.
 
