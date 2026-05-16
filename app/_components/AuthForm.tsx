@@ -10,15 +10,13 @@ import { Input } from "../_components/ui/input"
 import { Button } from "../_components/ui/button"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import { Check, CircleUser, X } from "lucide-react"
-import { buttonClass, inputClass } from "@/lib/tailwindClasses"
+import { buttonClass, divClass, inputClass } from "@/lib/tailwindClasses"
 import { Separator } from "./ui/separator"
 import Image from "next/image"
 import { Status } from "@/lib/types"
 import { useAuth } from "../_context/authentication"
 
 type Mode = "login" | "register"
-
-const divClass = "bg-white rounded-[20px] border shadow-[0px_6px_0px_#3A3A3A] flex flex-col p-8 gap-6 w-1/5"
 
 const defaultForm = [
     {
@@ -102,7 +100,7 @@ const AuthForm = () => {
     }
 
     return user ?
-        <div className={divClass}>
+        <div className={`${divClass} gap-6`}>
             <h1 className="text-4xl mb-2 font-momo">
                 Welcome back!
             </h1>
@@ -115,7 +113,7 @@ const AuthForm = () => {
                     Continue to board
                 </Button>
                 <Button 
-                    className={`bg-red-600 text-white py-4.5 w-full ${buttonClass}`}
+                    className={`bg-red-500 text-white py-4.5 w-full ${buttonClass}`}
                     onClick={handleSignOut}
                 >
                     Log out
@@ -125,10 +123,10 @@ const AuthForm = () => {
         <form 
             onSubmit={handleSubmit}
             method="post"
-            className={divClass}
+            className={`${divClass} gap-6`}
         >
             <FieldGroup key={mode} className="gap-4">
-                <h1 className="text-4xl mb-2 font-momo">{label}</h1>
+                <h1 className="text-4xl font-momo">{label}</h1>
                 {
                     form.map((input) => (
                         <Field key={input.id}>

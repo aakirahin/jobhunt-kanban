@@ -1,12 +1,10 @@
-import { Button } from '../ui/button'
-import { Sparkles } from 'lucide-react'
-import { buttonClass } from '@/lib/tailwindClasses'
 import FilterButton from './FilterButton'
 import DateFilterButton from './DateFilterButton'
 import AddJob from '../JobDialog/AddJob'
 import { Job } from '@/lib/types'
 import { DateRange } from 'react-day-picker'
 import GenerateJobReport from './GenerateJobReport'
+import { Input } from '../ui/input'
 
 type Props = {
     jobs: Job[]
@@ -14,6 +12,8 @@ type Props = {
     setSelections: (selections: Record<string, string[]>) => void
     dateRange: DateRange | undefined
     setDateRange: (dateRange: DateRange | undefined) => void
+    search: string
+    setSearch: (search: string) => void
 }
 
 type FilterDef = {
@@ -54,18 +54,16 @@ const FilterBar = ({
     selections,
     setSelections,
     dateRange,
-    setDateRange
+    setDateRange,
+    search,
+    setSearch
 }: Props) => {
     const filters = filterDefs.map(({ id, label, options }) => ({
         id,
         label,
-        options: options ? options : [
-            ...new Set(
-                jobs
-                .map((job) => ({ id: job[id], label: job[id] }))
-                .filter((v) => v.id !== null && v.id !== "")
-            ),
-        ],
+        options: options ? options : [...new Set(jobs.map((job) => (job[id])))]
+            .map((v) => ({ id: v, label: v }))
+            .filter((v) => v.id !== null && v.id !== "")
     }))
 
     const handleSelection = (filterId: string, values: string[]) => {
@@ -74,23 +72,29 @@ const FilterBar = ({
 
     return (
         <div className='flex justify-between'>
-            <div className='flex items-center gap-2'>
-                <span className='text-sm font-medium'>Filter by:</span>
-                {
-                    filters.map((filter) => (
-                        <FilterButton
-                            key={filter.id}
-                            filter={filter}
-                            selectedValues={selections[filter.id] ?? []}
-                            onSelection={(values) => handleSelection(filter.id, values)}
-                        />
-                    ))
-                }
-                <DateFilterButton dateRange={dateRange} onDateRangeChange={setDateRange}/>
+            <div className='flex items-center gap-4'>
+                <Input 
+                    placeholder="Search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+                <div className='flex items-center gap-2'>
+                    {
+                        filters.map((filter) => (
+                            <FilterButton
+                                key={filter.id}
+                                filter={filter}
+                                selectedValues={selections[filter.id] ?? []}
+                                onSelection={(values) => handleSelection(filter.id, values)}
+                            />
+                        ))
+                    }
+                    <DateFilterButton dateRange={dateRange} onDateRangeChange={setDateRange}/>
+                </div>
             </div>
             <div className='flex gap-2'>
                 <AddJob/>
-                <GenerateJobReport/>
+                <GenerateJobReport jobCount={jobs.length}/>
             </div>
         </div>
     )

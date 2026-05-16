@@ -7,7 +7,9 @@ import { queryClient } from "@/app/providers"
 import { useGuest } from "@/app/_context/guest"
 
 export type JobFilters = {
+    search: string
     title?: string[]
+    company?: string[]
     location?: string[]
     work_arrangement?: string[]
     contract_type?: string[]
@@ -18,7 +20,9 @@ export type JobFilters = {
 const applyGuestFilters = (jobs: Job[], filters: JobFilters): Job[] =>
     jobs.filter((job) => {
         const { 
+            search,
             title, 
+            company,
             location, 
             work_arrangement, 
             contract_type, 
@@ -26,7 +30,9 @@ const applyGuestFilters = (jobs: Job[], filters: JobFilters): Job[] =>
             to 
         } = filters
 
+        if (search && (!job.title.toLowerCase().includes(search.toLowerCase().trim()) && !job.company.toLowerCase().includes(search.toLowerCase().trim()))) return false
         if (title && !title.includes(job.title)) return false
+        if (company && !company.includes(job.company)) return false
         if (location && !location.includes(job.location)) return false
         if (work_arrangement && !work_arrangement.includes(job.work_arrangement)) return false
         if (contract_type && !contract_type.includes(job.contract_type)) return false

@@ -18,12 +18,13 @@ const JobCard = ({
     handleDelete,
     dragOverlay = false,
 }: Props) => {
-    console.log(job)
     const {
         title,
         company,
         url,
         location,
+        salary,
+        company_size,
         work_arrangement,
         contract_type,
         notes,
@@ -58,9 +59,12 @@ const JobCard = ({
                     />
                 </div>
             </div>
-            <span className={`${secondaryText} font-medium flex items-center gap-0.5`}>
-                <MapPin size={14}/>
-                {location}
+            <span className={`flex gap-1 ${secondaryText}`}>
+                <span className={`font-medium flex items-center gap-0.5`}>
+                    <MapPin size={14}/>
+                    {location}
+                </span>
+                {salary && <span>• £{salary}</span>}
             </span>
             <span className={secondaryText}>{notes}</span>
             <span className={`${secondaryText} mb-1`}>{url}</span>

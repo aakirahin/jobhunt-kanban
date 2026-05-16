@@ -14,19 +14,15 @@ A full-stack job application tracker with a Kanban board, drag-and-drop, multi-d
 
 **`withAuth` middleware wrapper** — All API routes are protected by a composable `withAuth(handler)` wrapper that verifies the Supabase session server-side and injects the authenticated user into the handler, eliminating repeated auth boilerplate across routes.
 
-**Server-side filtering with per-combination caching** — Filter changes updates the React Query cache key to `["jobs", activeFilters]`, triggering a fetch to `/api/jobs` where Prisma applies them. The same combination is cached for 30 seconds; new combinations always hit the database.
-
 **Guest mode with localStorage persistence** — Unauthenticated users can try the full board at `/guest` without signing up. `GuestContext` stores jobs and columns in `localStorage`. All job hooks (`useGetJobsQuery`, `useCreateJobMutation`, etc.) check `useGuest()` first — if a guest session is active, mutations bypass the API entirely and write directly to the context state + localStorage. Filters are applied client-side via `applyGuestFilters()` rather than via a server fetch.
 
-**Account deletion via Supabase Admin API** — `DELETE /api/users` uses the Supabase service role key to instantiate an admin client and call `auth.admin.deleteUser()`, removing the user from Supabase Auth. Cascade deletes defined in the Prisma schema handle the associated database records.
+**Job report** — A per-user analytics report covering application stats (response rate, interview rate, offer rate), timing insights (avg days applied → interview → offer), breakdowns by role/location/arrangement, and an AI-generated summary via the OpenAI API. The summary is generated from pre-computed structured stats rather than raw job data, keeping prompts small and costs minimal. The feature unlocks at 10 applications, with a preview shown below that threshold.
 
 ## Roadmap
 
-**Job report** *(in progress)* — A per-user analytics report covering application stats (response rate, interview rate, offer rate), timing insights (avg days applied → interview → offer), breakdowns by role/location/arrangement, and an AI-generated summary via the OpenAI API. The summary is generated from pre-computed structured stats rather than raw job data, keeping prompts small and costs minimal. The feature unlocks at 10 applications, with a preview shown below that threshold.
-
 **Browser extension** *(planned)* — A companion Chrome/Firefox extension that detects job applications submitted on third-party boards (LinkedIn, Indeed etc.) and automatically posts them to the kanban board. Content scripts scrape the job title and company from the page on form submission; a linked account token authenticates the POST to `/api/jobs`. This removes the manual tracking step entirely.
 
-**Friends & social layer** *(planned)* — The `Friendship` model and request/accept/decline flow are already in the schema. The planned surface includes a friends list, the ability to view a friend's board in a read-only mode, and comparison stats (e.g. response rates, activity trends) to add an accountability layer to the job search.
+**Friends & social layer** *(in-progress)* — The `Friendship` model and request/accept/decline flow are already in the schema. The planned surface includes a friends list, the ability to view a friend's board in a read-only mode, and comparison stats (e.g. response rates, activity trends) to add an accountability layer to the job search.
 
 ## Architecture
 

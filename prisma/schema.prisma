@@ -18,6 +18,7 @@ model User {
   name                     String?
   avatar                   String?
   status                   Status       @default(UNEMPLOYED)
+  mock                     Boolean      @default(false)
   jobs                     Job[]
   sent_friend_requests     Friendship[] @relation("SentFriendRequests")
   received_friend_requests Friendship[] @relation("ReceivedFriendRequests")
@@ -53,8 +54,7 @@ model Job {
   location            String
   work_arrangement    WorkArrangement
   contract_type       ContractType
-  company_size        CompanySize?
-  employees           Int?
+  company_size        CompanySize
   url                 String?
   notes               String?
   application_status  JobApplicationStatus @default(APPLIED) @map("applicationStatus")
@@ -96,7 +96,6 @@ enum ContractType {
 }
 
 enum CompanySize {
-  STARTUP
   SMALL
   MEDIUM
   LARGE
@@ -108,7 +107,6 @@ enum JobApplicationStatus {
   INTERVIEWED
   ACCEPTED
   REJECTED
-  WITHDRAWN
 }
 
 // TODO: Clean DB later, archive/prune old declined/canceled rows with a cron job.

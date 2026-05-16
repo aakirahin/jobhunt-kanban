@@ -20,12 +20,6 @@ const InputGroups = ({
 }: Props) => {
     const inputs: Input[] = [
         {
-            id: "title",
-            label: "Job title",
-            type: "text",
-            required: true
-        },
-        {
             id: "company",
             label: "Company",
             type: "text",
@@ -43,6 +37,13 @@ const InputGroups = ({
             type: "text",
             required: true
         },
+        {
+            id: "salary",
+            label: "Salary",
+            type: "number",
+            required: true
+        },
+        // TODO Maybe have currency + per year/month/week
     ]
 
     return (

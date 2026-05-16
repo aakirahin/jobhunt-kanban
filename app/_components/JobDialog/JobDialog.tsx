@@ -11,10 +11,11 @@ import InputGroups from './InputGroups'
 import { Field, FieldLabel } from '../ui/field'
 import { Textarea } from '../ui/textarea'
 import { Button } from '../ui/button'
-import { buttonClass } from '@/lib/tailwindClasses'
-import { ContractType, JobApplicationStatus, WorkArrangement } from '@/lib/generated/prisma/enums'
+import { buttonClass, inputClass } from '@/lib/tailwindClasses'
 import RadioGroups from './RadioGroups'
 import { Job as PrismaJob } from "@/lib/types"
+import { Label } from '../ui/label'
+import { Input } from '../ui/input'
 
 type Props = {
     triggerButton: React.ReactNode
@@ -23,17 +24,6 @@ type Props = {
     setOpen: (open: boolean) => void
     title: string
     job?: PrismaJob
-}
-
-type Job = {
-    title: string
-    company: string
-    url: string
-    location: string
-    work_arrangement: WorkArrangement
-    contract_type: ContractType
-    application_status: JobApplicationStatus
-    notes: string
 }
 
 const JobDialog = ({
@@ -64,9 +54,18 @@ const JobDialog = ({
                     <DialogTitle className='text-lg'>{title}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
+                    <Field key="title">
+                        <Label htmlFor="title">Job title</Label>
+                        <Input 
+                            id="title" 
+                            name="title" 
+                            className={inputClass} 
+                            required
+                            defaultValue={job?.title as string ?? ""}
+                        />
+                    </Field>
                     <InputGroups job={job}/>
                     {/* TODO IMPLEMENT GOOGLE MAPS AUTOCOMPLETE */}
-                    {/* TODO ADD COMPANY SIZE + EMPLOYEES */}
                     <RadioGroups job={job}/>
                     <Field>
                         <FieldLabel htmlFor="notes">Notes</FieldLabel>

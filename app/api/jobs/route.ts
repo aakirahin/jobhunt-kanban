@@ -5,7 +5,9 @@ import { ContractType, WorkArrangement } from "@/lib/generated/prisma/enums"
 
 export const GET = withAuth(async (request, user) => {
     const { searchParams } = new URL(request.url)
+    const search = searchParams.get('search')
     const title = searchParams.get('title')
+    const company = searchParams.get('company')
     const location = searchParams.get('location')
     const work_arrangement = searchParams.get('work_arrangement')
     const contract_type = searchParams.get('contract_type')
@@ -15,7 +17,14 @@ export const GET = withAuth(async (request, user) => {
     const jobs = await prisma.job.findMany({
         where: {
             user_id: user.id,
+            ...(search && {
+                OR: [
+                    { title: { contains: search.trim(), mode: 'insensitive' } },
+                    { company: { contains: search.trim(), mode: 'insensitive' } }
+                ]
+            }),
             ...(title && { title: { contains: title, mode: 'insensitive' } }),
+            ...(company && { company: { contains: company, mode: 'insensitive' } }),
             ...(location && { location: { contains: location, mode: 'insensitive' } }),
             ...(work_arrangement && { work_arrangement: work_arrangement as WorkArrangement }),
             ...(contract_type && { contract_type: contract_type as ContractType }),
@@ -49,9 +58,11 @@ export const POST = withAuth(async (request, user) => {
             title: body.title.trim(),
             company: body.company.trim(),
             url: body.url.trim() ?? "",
-            location: body.location.trim() ?? "",
-            work_arrangement: body.work_arrangement.trim() ?? "",
-            contract_type: body.contract_type.trim() ?? "",
+            location: body.location.trim(),
+            salary: body.salary.trim() ?? "",
+            company_size: body.company_size.trim(),
+            work_arrangement: body.work_arrangement.trim(),
+            contract_type: body.contract_type.trim(),
             application_status: body.application_status.trim(),
             notes: body.notes.trim() ?? "",
         },

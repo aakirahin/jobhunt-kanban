@@ -1,4 +1,4 @@
-import { ContractType, JobApplicationStatus, WorkArrangement } from "./generated/prisma/enums"
+import { CompanySize, ContractType, JobApplicationStatus, WorkArrangement } from "./generated/prisma/enums"
 
 export type Status = { 
     status: "error" | "success" | "" 
@@ -21,8 +21,7 @@ export type Job = {
     location: string,
     work_arrangement: WorkArrangement,
     contract_type: ContractType,
-    company_size?: CompanySize,
-    employees?: number,
+    company_size: CompanySize,
     url?: string,
     notes?: string,
     application_status: JobApplicationStatus,

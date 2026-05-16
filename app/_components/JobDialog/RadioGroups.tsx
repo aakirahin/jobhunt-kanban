@@ -22,10 +22,26 @@ type Radio = {
 const RadioGroups = ({
     job
 }: Props) => {
-    const { columns = [] } = useGetColumnsQuery()
-    
-    // TODO: ADD COMPANY SIZE
     const radios: Radio[] = [
+        {
+            id: "company_size",
+            label: "Company size",
+            default: "SMALL",
+            options: [
+                {
+                    id: "SMALL",
+                    label: "Small"
+                },
+                {
+                    id: "MEDIUM",
+                    label: "Medium"
+                },
+                {
+                    id: "LARGE",
+                    label: "Large"
+                },
+            ],
+        },
         {
             id: "work_arrangement",
             label: "Work arrangment",

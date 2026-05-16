@@ -3,24 +3,25 @@
 import { House, Users } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useAuth } from '../_context/authentication'
 import { usePathname } from 'next/navigation'
+import { User } from '@supabase/supabase-js'
 
 type Props = {
+    userId: string
     guest?: boolean
 }
 
 const Sidebar = ({
+    userId,
     guest = false
 }: Props) => {
-    const { user } = useAuth()
     const selected = usePathname()
     const defaultLinks = [
         {
             id: "home",
             label: "Home",
             icon: <House size={16}/>,
-            href: guest ? "/guest" : `/user/${user?.id}`,
+            href: guest ? "/guest" : `/user/${userId}`,
         }
     ]
     const links = guest ? defaultLinks : [
@@ -29,7 +30,7 @@ const Sidebar = ({
             id: "friends",
             label: "Friends",
             icon: <Users size={16}/>,
-            href: `/user/${user?.id}/friends`,
+            href: `/user/${userId}/friends`,
         },
     ]
 
